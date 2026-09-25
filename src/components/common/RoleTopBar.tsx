@@ -57,6 +57,28 @@ export const RoleTopBar: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.tab,
+            activeRole === 'clinic' && styles.activeClinicTab,
+          ]}
+          onPress={() => setActiveRole('clinic')}
+        >
+          <Ionicons
+            name="business"
+            size={13}
+            color={activeRole === 'clinic' ? '#FFFFFF' : '#475569'}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              activeRole === 'clinic' && styles.activeTabText,
+            ]}
+          >
+            Clinic
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.tab,
             activeRole === 'lab' && styles.activeLabTab,
           ]}
           onPress={() => setActiveRole('lab')}
@@ -125,6 +147,9 @@ const styles = StyleSheet.create({
   },
   activeDoctorTab: {
     backgroundColor: '#0284C7',
+  },
+  activeClinicTab: {
+    backgroundColor: '#2563EB',
   },
   activeLabTab: {
     backgroundColor: '#0D9488',
