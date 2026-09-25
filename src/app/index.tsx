@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,9 +10,11 @@ import {
   StatusBar,
   ScrollView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import { useClinic } from '../context/ClinicContext';
 import { Clinic } from '../types/clinic';
@@ -32,13 +34,32 @@ import { ClinicDashboard } from '../components/clinic/ClinicDashboard';
 import { DoctorHeader } from '../components/doctor/DoctorHeader';
 import { ClinicCard } from '../components/clinic/ClinicCard';
 import { SectionHeader } from '../components/dashboard/SectionHeader';
+import { OnboardingScreen, ONBOARDING_STORAGE_KEY } from '../components/onboarding/OnboardingScreen';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { clinics, selectClinic, doctor, toastMessage } = useClinic();
-  
-  // Default to 'clinic-dashboard' so the exact mockup design is displayed immediately
+
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+
+  // Default to 'clinic-dashboard'
   const [activePortal, setActivePortal] = useState<'clinic-dashboard' | 'doctor-clinics'>('clinic-dashboard');
+
+  useEffect(() => {
+    checkOnboardingStatus();
+  }, []);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const value = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
+      setHasSeenOnboarding(value === 'true');
+    } catch (e) {
+      setHasSeenOnboarding(false);
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  };
 
   const handleOpenClinic = (clinic: Clinic) => {
     selectClinic(clinic.id);
@@ -47,6 +68,36 @@ export default function HomeScreen() {
       params: { clinicId: clinic.id },
     });
   };
+
+  const handleReopenOnboarding = () => {
+    router.push('/onboarding');
+  };
+
+  // Loading state
+  if (isLoadingAuth || hasSeenOnboarding === null) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#0B8EF3" />
+        <View style={styles.loadingCard}>
+          <Ionicons name="medical" size={42} color="#0B8EF3" />
+          <Text style={styles.loadingTitle}>Upchar Health</Text>
+          <ActivityIndicator size="small" color="#0B8EF3" style={{ marginTop: 12 }} />
+        </View>
+      </View>
+    );
+  }
+
+  // First-time open: show onboarding carousel
+  if (!hasSeenOnboarding) {
+    return (
+      <OnboardingScreen
+        onComplete={() => {
+          setHasSeenOnboarding(true);
+          router.replace('/role-selection');
+        }}
+      />
+    );
+  }
 
   // If user is not yet logged in, show the tri-role login screen
   if (!isAuthenticated) {
@@ -78,7 +129,7 @@ export default function HomeScreen() {
             <Ionicons
               name="business"
               size={14}
-              color={activePortal === 'clinic-dashboard' ? '#007AFF' : '#64748B'}
+              color={activePortal === 'clinic-dashboard' ? '#0B8EF3' : '#64748B'}
             />
             <Text
               style={[
@@ -101,7 +152,7 @@ export default function HomeScreen() {
             <Ionicons
               name="medkit"
               size={14}
-              color={activePortal === 'doctor-clinics' ? '#007AFF' : '#64748B'}
+              color={activePortal === 'doctor-clinics' ? '#0B8EF3' : '#64748B'}
             />
             <Text
               style={[
@@ -111,6 +162,16 @@ export default function HomeScreen() {
             >
               Doctor Portal
             </Text>
+          </TouchableOpacity>
+
+          {/* Tour Replay Button */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleReopenOnboarding}
+            style={styles.tourBtn}
+            accessibilityLabel="View Onboarding Tour"
+          >
+            <Ionicons name="sparkles" size={14} color="#0B8EF3" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -192,6 +253,25 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0F172A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingCard: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 28,
+    paddingVertical: 24,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  loadingTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginTop: 8,
+  },
   root: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -203,11 +283,13 @@ const styles = StyleSheet.create({
   },
   switcherBar: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#F1F5F9',
     borderRadius: 12,
     marginHorizontal: 16,
     marginVertical: 6,
     padding: 3,
+    gap: 4,
   },
   switchBtn: {
     flex: 1,
@@ -232,8 +314,16 @@ const styles = StyleSheet.create({
     color: '#64748B',
   },
   switchBtnTextActive: {
-    color: '#007AFF',
+    color: '#0B8EF3',
     fontWeight: '700',
+  },
+  tourBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#EBF5FF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   safeArea: {
     flex: 1,
