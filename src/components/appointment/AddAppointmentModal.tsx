@@ -11,8 +11,8 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useClinic } from '../context/ClinicContext';
-import { TimeSlot } from '../types/clinic';
+import { useClinic } from '../../context/ClinicContext';
+import { TimeSlot } from '../../types/clinic';
 
 interface AddAppointmentModalProps {
   visible: boolean;
