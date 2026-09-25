@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  Text,
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
@@ -13,8 +15,21 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../context/AuthContext';
 import { useClinic } from '../context/ClinicContext';
 import { Clinic } from '../types/clinic';
+
+import { LoginScreen } from '../components/auth/LoginScreen';
+import { RoleTopBar } from '../components/common/RoleTopBar';
+import { PatientDashboard } from '../components/patient/PatientDashboard';
+import { DoctorDashboard } from '../components/doctor/DoctorDashboard';
+import { LabDashboard } from '../components/lab/LabDashboard';
+import { ClinicDashnoard } from '../components/clinic/ClinicDashboard;
+
+export default function AppEntry() {
+  const router = useRouter();
+  const { isAuthenticated, activeRole } = useAuth();
+  const { selectClinic, toastMessage } = useClinic();
 import { ClinicDashboard } from '../components/clinic/ClinicDashboard';
 import { DoctorHeader } from '../components/doctor/DoctorHeader';
 import { ClinicCard } from '../components/clinic/ClinicCard';
@@ -84,7 +99,21 @@ export default function HomeScreen() {
     );
   }
 
+  // If user is not yet logged in, show the tri-role login screen
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  // Once authenticated, show the active role experience with the RoleTopBar
   return (
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Floating Toast Notification from ClinicContext */}
+      {toastMessage && (
+        <View style={styles.toastContainer}>
+          <Ionicons name="information-circle" size={18} color="#FFFFFF" />
+          <Text style={styles.toastText}>{toastMessage}</Text>
     <View style={styles.root}>
       {/* Top Portal Switcher (Clinic Operations vs Doctor Schedule) */}
       <SafeAreaView style={styles.switcherSafeArea}>
@@ -147,6 +176,30 @@ export default function HomeScreen() {
         </View>
       </SafeAreaView>
 
+      {/* Top Role Switcher Bar: Allows instantaneous switching between Patient, Doctor, and Lab */}
+      <RoleTopBar />
+
+      {/* Render the Active Role Experience */}
+      <View style={styles.content}>
+        {activeRole === 'patient' && (
+          <PatientDashboard
+            onNavigateToClinicDetail={(clinicId) => {
+              selectClinic(clinicId);
+              router.push({
+                pathname: '/schedule-detail',
+                params: { clinicId },
+              });
+            }}
+          />
+        )}
+
+        {activeRole === 'doctor' && (
+          <DoctorDashboard onOpenClinic={handleOpenClinic} />
+        )}
+
+        {activeRole === 'lab' && <LabDashboard />}
+      </View>
+    </SafeAreaView>
       {/* Render Active Portal */}
       {activePortal === 'clinic-dashboard' ? (
         <ClinicDashboard />
@@ -276,17 +329,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFD',
   },
-  container: {
+  content: {
     flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 12 : 6,
-    paddingBottom: 40,
   },
   toastContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
+    top: 50,
     left: 20,
     right: 20,
     backgroundColor: '#0F172A',
@@ -308,8 +356,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     flex: 1,
-  },
-  clinicsList: {
-    gap: 14,
   },
 });
