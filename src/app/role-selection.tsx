@@ -13,12 +13,15 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ONBOARDING_STORAGE_KEY } from '../components/onboarding/OnboardingScreen';
+import { useAuth } from '../context/AuthContext';
+import { UserRole } from '../types/auth';
 
 export default function RoleSelectionScreen() {
   const router = useRouter();
+  const { setActiveRole } = useAuth();
 
-  const handleSelectRole = (role: 'patient' | 'doctor' | 'clinic') => {
-    // Navigate to the main home/dashboard
+  const handleSelectRole = (role: UserRole) => {
+    setActiveRole(role);
     router.replace('/');
   };
 
@@ -114,6 +117,26 @@ export default function RoleSelectionScreen() {
               <Text style={styles.roleTitle}>I'm a Clinic</Text>
               <Text style={styles.roleDesc}>
                 Oversee OPD sessions, doctor shifts, staff, and daily queue
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+          </TouchableOpacity>
+
+          {/* Diagnostic & Lab */}
+          <TouchableOpacity
+            style={styles.roleCard}
+            activeOpacity={0.85}
+            onPress={() => handleSelectRole('lab')}
+            accessibilityRole="button"
+            accessibilityLabel="I'm a Diagnostic Lab"
+          >
+            <View style={[styles.iconContainer, { backgroundColor: '#F0FDFA' }]}>
+              <Ionicons name="flask" size={26} color="#0D9488" />
+            </View>
+            <View style={styles.roleInfo}>
+              <Text style={styles.roleTitle}>I'm a Diagnostic Lab</Text>
+              <Text style={styles.roleDesc}>
+                Manage diagnostic orders, sample collections, and upload reports
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
