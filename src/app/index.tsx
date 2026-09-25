@@ -15,6 +15,7 @@ import { useClinic } from '../context/ClinicContext';
 import { Clinic } from '../types/clinic';
 
 import { LoginScreen } from '../components/auth/LoginScreen';
+import { PatientRegistrationScreen } from '../components/auth/PatientRegistrationScreen';
 import { RoleTopBar } from '../components/common/RoleTopBar';
 import { PatientDashboard } from '../components/patient/PatientDashboard';
 import { DoctorDashboard } from '../components/doctor/DoctorDashboard';
@@ -29,6 +30,7 @@ export default function AppEntry() {
 
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
     checkOnboardingStatus();
@@ -36,6 +38,11 @@ export default function AppEntry() {
 
   const checkOnboardingStatus = async () => {
     try {
+      // During development, reset onboarding flag so it always shows on restart.
+      // Remove this block (or set to false) before shipping to production.
+      if (__DEV__) {
+        await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
+      }
       const value = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
       setHasSeenOnboarding(value === 'true');
     } catch (e) {
@@ -78,9 +85,21 @@ export default function AppEntry() {
     );
   }
 
-  // If user is not yet logged in, show the tri-role login screen
+  // If user is not yet logged in, show the tri-role login or registration screen
   if (!isAuthenticated) {
-    return <LoginScreen />;
+    if (authView === 'register') {
+      return (
+        <PatientRegistrationScreen
+          onBackToLogin={() => setAuthView('login')}
+          onSuccessRegistration={() => setAuthView('login')}
+        />
+      );
+    }
+    return (
+      <LoginScreen
+        onNavigateToRegister={() => setAuthView('register')}
+      />
+    );
   }
 
   // Once authenticated, show the active role experience with the RoleTopBar

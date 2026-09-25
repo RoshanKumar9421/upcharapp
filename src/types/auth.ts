@@ -24,7 +24,23 @@ export interface UserProfile {
   phone?: string;
   avatarUrl?: string;
   specialtyOrTagline?: string;
+  bloodGroup?: string;
+  dateOfBirth?: string;
+  gender?: 'male' | 'female' | 'other';
+  address?: string;
   isVerified?: boolean;
+}
+
+export interface PatientRegistrationData {
+  fullName: string;
+  dateOfBirth: string;
+  gender: 'male' | 'female' | 'other';
+  mobileNumber: string;
+  isPhoneVerified: boolean;
+  email?: string;
+  bloodGroup?: string;
+  address?: string;
+  avatarUri?: string;
 }
 
 export interface AuthState {
