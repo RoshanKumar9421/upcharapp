@@ -18,9 +18,10 @@ import { SocialAuthButtons } from './SocialAuthButtons';
 
 interface LoginScreenProps {
   onSuccessLogin?: () => void;
+  onNavigateToRegister?: () => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccessLogin }) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccessLogin, onNavigateToRegister }) => {
   const {
     activeRole,
     setActiveRole,
@@ -118,12 +119,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccessLogin }) => {
           <Text style={styles.footerPromptText}>Don't have an account? </Text>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() =>
-              Alert.alert(
-                'Registration',
-                `Redirecting to ${config.title} registration form...`
-              )
-            }
+            onPress={() => {
+              if (activeRole === 'patient' && onNavigateToRegister) {
+                onNavigateToRegister();
+              } else {
+                Alert.alert(
+                  'Registration',
+                  `Redirecting to ${config.title} registration form...`
+                );
+              }
+            }}
           >
             <Text style={styles.footerLinkText}>Create Account</Text>
           </TouchableOpacity>
