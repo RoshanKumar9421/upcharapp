@@ -62,6 +62,30 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
         </Text>
       </TouchableOpacity>
 
+      {/* Clinic Tab */}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        style={[
+          styles.tabButton,
+          activeRole === 'clinic' && styles.activeTabButton,
+        ]}
+        onPress={() => onSelectRole('clinic')}
+      >
+        <Ionicons
+          name="business-outline"
+          size={18}
+          color={activeRole === 'clinic' ? '#0080FF' : '#475569'}
+        />
+        <Text
+          style={[
+            styles.tabText,
+            activeRole === 'clinic' && styles.activeTabText,
+          ]}
+        >
+          Clinic
+        </Text>
+      </TouchableOpacity>
+
       {/* Lab Tab */}
       <TouchableOpacity
         activeOpacity={0.8}
