@@ -1,24 +1,27 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  ScrollView,
-  StatusBar,
   SafeAreaView,
-  Platform,
+  StatusBar,
+  Text,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 import { useClinic } from '../context/ClinicContext';
 import { Clinic } from '../types/clinic';
-import { DoctorHeader } from '../components/doctor/DoctorHeader';
-import { ClinicCard } from '../components/clinic/ClinicCard';
-import { SectionHeader } from '../components/dashboard/SectionHeader';
 
-export default function ClinicsHomeScreen() {
+import { LoginScreen } from '../components/auth/LoginScreen';
+import { RoleTopBar } from '../components/common/RoleTopBar';
+import { PatientDashboard } from '../components/patient/PatientDashboard';
+import { DoctorDashboard } from '../components/doctor/DoctorDashboard';
+import { LabDashboard } from '../components/lab/LabDashboard';
+
+export default function AppEntry() {
   const router = useRouter();
-  const { clinics, selectClinic, doctor, toastMessage } = useClinic();
+  const { isAuthenticated, activeRole } = useAuth();
+  const { selectClinic, toastMessage } = useClinic();
 
   const handleOpenClinic = (clinic: Clinic) => {
     selectClinic(clinic.id);
@@ -28,11 +31,17 @@ export default function ClinicsHomeScreen() {
     });
   };
 
+  // If user is not yet logged in, show the tri-role login screen
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
+  // Once authenticated, show the active role experience with the RoleTopBar
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFD" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Floating Toast Notification */}
+      {/* Floating Toast Notification from ClinicContext */}
       {toastMessage && (
         <View style={styles.toastContainer}>
           <Ionicons name="information-circle" size={18} color="#FFFFFF" />
@@ -40,37 +49,29 @@ export default function ClinicsHomeScreen() {
         </View>
       )}
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Doctor Header & Active Badges */}
-        <DoctorHeader
-          doctor={doctor}
-          onAvatarPress={() =>
-            router.push({ pathname: '/schedule-detail', params: { clinicId: 'city-care' } })
-          }
-        />
+      {/* Top Role Switcher Bar: Allows instantaneous switching between Patient, Doctor, and Lab */}
+      <RoleTopBar />
 
-        {/* Section Heading */}
-        <SectionHeader
-          title="My Clinics"
-          subtitle="Clinics you're currently associated with"
-        />
+      {/* Render the Active Role Experience */}
+      <View style={styles.content}>
+        {activeRole === 'patient' && (
+          <PatientDashboard
+            onNavigateToClinicDetail={(clinicId) => {
+              selectClinic(clinicId);
+              router.push({
+                pathname: '/schedule-detail',
+                params: { clinicId },
+              });
+            }}
+          />
+        )}
 
-        {/* Clinic Cards List */}
-        <View style={styles.clinicsList}>
-          {clinics.map((clinic) => (
-            <ClinicCard
-              key={clinic.id}
-              clinic={clinic}
-              isHighlighted={clinic.isPrimary}
-              onPress={() => handleOpenClinic(clinic)}
-            />
-          ))}
-        </View>
-      </ScrollView>
+        {activeRole === 'doctor' && (
+          <DoctorDashboard onOpenClinic={handleOpenClinic} />
+        )}
+
+        {activeRole === 'lab' && <LabDashboard />}
+      </View>
     </SafeAreaView>
   );
 }
@@ -80,17 +81,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFD',
   },
-  container: {
+  content: {
     flex: 1,
-  },
-  contentContainer: {
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 12 : 6,
-    paddingBottom: 40,
   },
   toastContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
+    top: 50,
     left: 20,
     right: 20,
     backgroundColor: '#0F172A',
@@ -112,8 +108,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     flex: 1,
-  },
-  clinicsList: {
-    gap: 14,
   },
 });
