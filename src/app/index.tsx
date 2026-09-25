@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   StatusBar,
   Text,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import { useClinic } from '../context/ClinicContext';
 import { Clinic } from '../types/clinic';
@@ -18,11 +20,30 @@ import { PatientDashboard } from '../components/patient/PatientDashboard';
 import { DoctorDashboard } from '../components/doctor/DoctorDashboard';
 import { LabDashboard } from '../components/lab/LabDashboard';
 import { ClinicDashboard } from '../components/clinic/ClinicDashboard';
+import { OnboardingScreen, ONBOARDING_STORAGE_KEY } from '../components/onboarding/OnboardingScreen';
 
 export default function AppEntry() {
   const router = useRouter();
   const { isAuthenticated, activeRole } = useAuth();
   const { selectClinic, toastMessage } = useClinic();
+
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    checkOnboardingStatus();
+  }, []);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const value = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
+      setHasSeenOnboarding(value === 'true');
+    } catch (e) {
+      setHasSeenOnboarding(false);
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  };
 
   const handleOpenClinic = (clinic: Clinic) => {
     selectClinic(clinic.id);
@@ -31,6 +52,31 @@ export default function AppEntry() {
       params: { clinicId: clinic.id },
     });
   };
+
+  // Loading state
+  if (isLoadingAuth || hasSeenOnboarding === null) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#0B8EF3" />
+        <View style={styles.loadingCard}>
+          <Ionicons name="medical" size={42} color="#0B8EF3" />
+          <Text style={styles.loadingTitle}>Upchar Health</Text>
+          <ActivityIndicator size="small" color="#0B8EF3" style={{ marginTop: 12 }} />
+        </View>
+      </View>
+    );
+  }
+
+  // First-time open: show onboarding carousel
+  if (!hasSeenOnboarding) {
+    return (
+      <OnboardingScreen
+        onComplete={() => {
+          setHasSeenOnboarding(true);
+        }}
+      />
+    );
+  }
 
   // If user is not yet logged in, show the tri-role login screen
   if (!isAuthenticated) {
@@ -50,7 +96,7 @@ export default function AppEntry() {
         </View>
       )}
 
-      {/* Top Role Switcher Bar: Allows instantaneous switching between Patient, Doctor, and Lab */}
+      {/* Top Role Switcher Bar: Allows instantaneous switching between Patient, Doctor, Clinic, and Lab */}
       <RoleTopBar />
 
       {/* Render the Active Role Experience */}
@@ -80,6 +126,25 @@ export default function AppEntry() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0F172A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingCard: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 28,
+    paddingVertical: 24,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  loadingTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginTop: 8,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#FFFFFF',
