@@ -12,14 +12,13 @@ export default function Index() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}> 
       <View style={styles.content}>
         {activeTab === 'home' && <HomeScreen onNavigateToTab={(tab) => setActiveTab(tab as TabType)} />}
         {activeTab === 'appointments' && <AppointmentsScreen />}
         {activeTab === 'prescriptions' && <PrescriptionsScreen />}
         {activeTab === 'profile' && <ProfileScreen onSelectRole={() => {}} />}
       </View>
-
       <BottomTabBar activeTab={activeTab} onTabPress={setActiveTab} />
     </View>
   );
