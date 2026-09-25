@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
-interface CircularProgressProps {
+interface QueueProgressProps {
   value: number;
   total: number;
   size?: number;
@@ -11,23 +11,22 @@ interface CircularProgressProps {
   bgColor?: string;
 }
 
-export const CircularProgress: React.FC<CircularProgressProps> = ({
+export const QueueProgress: React.FC<QueueProgressProps> = ({
   value,
   total,
-  size = 52,
+  size = 50,
   strokeWidth = 4.5,
   strokeColor = '#007AFF',
-  bgColor = '#E5E7EB',
+  bgColor = '#E2E8F0',
 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const progress = total > 0 ? (value / total) : 0;
+  const progress = total > 0 ? value / total : 0;
   const strokeDashoffset = circumference - progress * circumference;
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={size} height={size} style={styles.svg}>
-        {/* Background Circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -36,7 +35,6 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           strokeWidth={strokeWidth}
           fill="transparent"
         />
-        {/* Progress Circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
