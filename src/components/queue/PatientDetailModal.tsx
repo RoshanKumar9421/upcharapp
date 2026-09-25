@@ -8,8 +8,8 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { TimeSlot } from '../types/clinic';
-import { useClinic } from '../context/ClinicContext';
+import { TimeSlot } from '../../types/clinic';
+import { useClinic } from '../../context/ClinicContext';
 
 interface PatientDetailModalProps {
   visible: boolean;
